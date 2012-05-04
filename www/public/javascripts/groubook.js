@@ -32,17 +32,13 @@ Groubook.prototype = {
         birthday = this.parseDate(friends[i].birthday_date);
         friends[i].birthday_date = birthday;
         friends[i].days_til = this.daysTil(birthday);
-        if(friends[i].days_til < 300 
-          && friends[i].days_til > -2
-          && friends[i].activities != ""
-          && friends[i].interests != ""){
+        if(friends[i].days_til < 30 && friends[i].days_til > -2){
          this.friends.push(friends[i]);
         }
       }
     }
     console.log(this.friends);
-    //this.getDeals('deal');
-    this.showGiftDeals();
+    this.getDeals('deal');
   }
 , parseDate: function(date){
     return new Date(date);
@@ -75,55 +71,6 @@ Groubook.prototype = {
         this.deals[i] = {personas: personas, deal: dealNodes[i]};
       }
     };
-    console.log('Selected Gift Deals:');
-    console.log(this.deals);
-  }
-, showGiftDeals :function(){
-    var localDealsContainer = $('#local');
-    var giftDealsContainer = localDealsContainer.clone();
-    giftDealsContainer.attr('id', 'gifts');
-    giftDealsContainer.removeClass('local');
-    giftDealsContainer.addClass('gifts');
-    giftDealsContainer.find('.group_title').html('Gift Deals');
-    var giftDeals = giftDealsContainer.find('.deals .hoverable');
-    //select all deals
-    var giftDealsOriginalClone = giftDeals.clone();
-    giftDeals.replace("");
-    
-    //build gift deal container
-    localDealsContainer.before(giftDealsContainer);
-    
-    //filter all deals by gift deals per facebook user
-    var giftIdeas = [];
-    this.friends = [this.friends[2]];
-    for( var f in this.friends) {
-      //var giftIdeas = [];
-      var friend = this.friends[f];
-      console.log(friend);
-      console.log('splitting...')
-      var keywords = friend.activities.split(' ');
-      keywords = ['Yoga'];
-      var giftDealsClone = giftDealsOriginalClone.clone();
-      for ( var k in keywords) {
-        var word = keywords[k];
-        console.log(word);
-        console.log(giftDealsClone.size());
-        // for ( var d in giftDealsClone) {
-        //   var deal = giftDealsClone[d];
-        //   var potentialDeal = $(deal).find('.info .title a')[0];
-        //   if (potentialDeal && potentialDeal.innerHTML.indexOf(word) != -1) {
-        //     giftIdeas.push(deal);
-        //     giftDealsClone[d].replace('');
-        //   }
-        // }
-      }
-    }
-    
-    //insert gift deals
-    // for (var g in giftIdeas) {
-    //   var gift = giftIdeas[g];
-    //   giftDealsContainer.find('.deals').append(gift);
-    // }
   }
 }
 f = new Groubook();
