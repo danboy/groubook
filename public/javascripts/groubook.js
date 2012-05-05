@@ -21,7 +21,7 @@ Groubook.prototype = {
   getFriends: function(){
      FB.api(
       { method: 'fql.query'
-      , query: 'select name, birthday_date, activities, interests from user where uid in (select uid2 from friend where uid1=me())'}
+      , query: 'select name, birthday_date, activities, interests, sports, games, music, movies, books, tv from user where uid in (select uid2 from friend where uid1=me())'}
       , function(data) {
         this.findGifts(data);
       }.bind(this));
@@ -32,10 +32,17 @@ Groubook.prototype = {
         birthday = this.parseDate(friends[i].birthday_date);
         friends[i].birthday_date = birthday;
         friends[i].days_til = this.daysTil(birthday);
-        if(friends[i].days_til < 356 //this can be limited. Right now, we're taking the entire year. 
+        if(friends[i].days_til < 90 //doing the whole year for now... can be limited in the future
           && friends[i].days_til > -2
           && (friends[i].activities != ""
-          || friends[i].interests != "")) {
+          || friends[i].interests != ""
+          || friends[i].games != ""
+          || friends[i].music != ""
+          || friends[i].movies != ""
+          || friends[i].books != ""
+          || friends[i].tv != ""
+          || friends[i].sports.length != 0
+          )) {
          this.friends.push(friends[i]);
         }
       }
@@ -99,10 +106,10 @@ Groubook.prototype = {
       console.log('friend');
       console.log(friend);
       giftIdeas[friend.name] = [];
-      var keywords = (friend.activities + " " + friend.interests).split(/[ :,]/);
+      var keywords = _([friend.activities, friend.interests, friend.games, friend.music, friend.movies, friend.books, friend.tv]).union(friend.sports).join(' ').split(/[ :,()]/);
       keywords = _(keywords).map(function(keyword) {return keyword.toLowerCase()});
       keywords = _(keywords).reject(function(keyword) {return keyword.length <= 2});
-      keywords = _(keywords).without('the');
+      keywords = _(keywords).without('the','and','for','like','free','your');
       keywords = _(keywords).uniq();
       console.log('keywords');
       console.log(keywords);
@@ -115,6 +122,7 @@ Groubook.prototype = {
           }
         });
       });
+      giftIdeas[friend.name] = giftIdeas[friend.name].slice(0,3);
     });
     
     //insert gift deals
