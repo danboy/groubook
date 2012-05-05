@@ -32,15 +32,14 @@ Groubook.prototype = {
         birthday = this.parseDate(friends[i].birthday_date);
         friends[i].birthday_date = birthday;
         friends[i].days_til = this.daysTil(birthday);
-        if(friends[i].days_til < 300 
+        if(friends[i].days_til < 356 //this can be limited. Right now, we're taking the entire year. 
           && friends[i].days_til > -2
-          && friends[i].activities != ""
-          && friends[i].interests != ""){
+          && (friends[i].activities != ""
+          || friends[i].interests != "")) {
          this.friends.push(friends[i]);
         }
       }
     }
-    console.log(this.friends);
     //this.getDeals('deal');
     this.showGiftDeals();
   }
@@ -64,7 +63,6 @@ Groubook.prototype = {
       for( var i in dealNodes){
         if(typeof(dealNodes[i]) === 'object'){
         var personas = [];
-        console.log(typeof(dealNodes[6]));
         var personaNodes = dealNodes[i].getElementsByClassName('persona');
         for( var j in personaNodes){
           var kids = personaNodes[j].childNodes
@@ -75,8 +73,6 @@ Groubook.prototype = {
         this.deals[i] = {personas: personas, deal: dealNodes[i]};
       }
     };
-    console.log('Selected Gift Deals:');
-    console.log(this.deals);
   }
 , showGiftDeals :function(){
     var localDealsContainer = $('#local');
@@ -84,46 +80,51 @@ Groubook.prototype = {
     giftDealsContainer.attr('id', 'gifts');
     giftDealsContainer.removeClass('local');
     giftDealsContainer.addClass('gifts');
-    giftDealsContainer.find('.group_title').html('Gift Deals');
+    giftDealsContainer.find('.group_title').html('Gift Deal Suggestions for Facebook Friends');
     var giftDeals = giftDealsContainer.find('.deals .hoverable');
     //select all deals
-    var giftDealsOriginalClone = giftDeals.clone();
-    giftDeals.replace("");
+    var giftDealsClone = giftDeals.clone();
+    giftDealsContainer.find('.deals').replace("");
     
     //build gift deal container
     localDealsContainer.before(giftDealsContainer);
     
     //filter all deals by gift deals per facebook user
-    var giftIdeas = [];
-    this.friends = [this.friends[2]];
-    for( var f in this.friends) {
-      //var giftIdeas = [];
-      var friend = this.friends[f];
+    var giftIdeas = {};
+    console.log('this.friends');
+    console.log(this.friends);
+    _(this.friends).each(function(friend) {
+      console.log('friend');
       console.log(friend);
-      console.log('splitting...')
-      var keywords = friend.activities.split(' ');
-      keywords = ['Yoga'];
-      var giftDealsClone = giftDealsOriginalClone.clone();
-      for ( var k in keywords) {
-        var word = keywords[k];
-        console.log(word);
-        console.log(giftDealsClone.size());
-        // for ( var d in giftDealsClone) {
-        //   var deal = giftDealsClone[d];
-        //   var potentialDeal = $(deal).find('.info .title a')[0];
-        //   if (potentialDeal && potentialDeal.innerHTML.indexOf(word) != -1) {
-        //     giftIdeas.push(deal);
-        //     giftDealsClone[d].replace('');
-        //   }
-        // }
-      }
-    }
+      giftIdeas[friend.name] = [];
+      var keywords = (friend.activities + " " + friend.interests).split(/[ :,]/);
+      keywords = _(keywords).map(function(keyword) {return keyword.toLowerCase()});
+      keywords = _(keywords).reject(function(keyword) {return keyword.length <= 2});
+      keywords = _(keywords).without('the');
+      console.log('keywords');
+      console.log(keywords);
+      _(keywords).each(function(word) {
+        _(giftDealsClone).each(function(deal, dealIndex) {
+          var potentialDeal = $(deal).find('.info .title a')[0];
+          if (potentialDeal && potentialDeal.innerHTML.toLowerCase().indexOf(word) != -1) {
+            giftIdeas[friend.name].push(deal);
+          }
+        });
+      });
+    });
     
     //insert gift deals
-    // for (var g in giftIdeas) {
-    //   var gift = giftIdeas[g];
-    //   giftDealsContainer.find('.deals').append(gift);
-    // }
+    console.log(giftIdeas);
+    _(this.friends).each(function(friend) {
+      var container = $('<div class="deals"></div>');
+      container.append("<h4>" + friend.name + "</h4>");
+      $(giftIdeas[friend.name]).removeClass('last');
+      _(giftIdeas[friend.name]).each(function(gift, giftIndex) {
+        if ((giftIndex % 3) == 2) $(gift).addClass('last');
+        container.append(gift);
+      });
+      if (giftIdeas[friend.name].length > 0) giftDealsContainer.append(container);      
+    });
   }
 }
 f = new Groubook();
