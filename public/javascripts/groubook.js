@@ -62,19 +62,23 @@ Groubook.prototype = {
     var dealNodes = document.getElementsByClassName(className);
       for( var i in dealNodes){
         if(typeof(dealNodes[i]) === 'object'){
-        var personas = [];
-        var personaNodes = dealNodes[i].getElementsByClassName('persona');
-        for( var j in personaNodes){
-          var kids = personaNodes[j].childNodes
-          if(kids && typeof(kids[1]) != 'function'){
-            personas.push(kids[1].firstChild.nodeValue);
-          }
-        }
-        this.deals[i] = {personas: personas, deal: dealNodes[i]};
+        this.deals[i] = {personas: this.getPersonas(dealNodes[i]), deal: dealNodes[i]};
       }
     };
   }
-, showGiftDeals :function(){
+, getPersonas: function(dealNode) {
+  var personas = [];
+  var personaNodes = $(dealNode).find('.persona');
+  _(personaNodes).each(function(personaNode) {
+    var kids = personaNode.childNodes
+    if(kids && typeof(kids[1]) != 'function'){
+      personas.push(kids[1].firstChild.nodeValue);
+    }
+  });
+  return personas;
+}
+, showGiftDeals :function() {
+    var self = this;
     var localDealsContainer = $('#local');
     var giftDealsContainer = localDealsContainer.clone();
     giftDealsContainer.attr('id', 'gifts');
@@ -83,7 +87,7 @@ Groubook.prototype = {
     giftDealsContainer.find('.group_title').html('Gift Deal Suggestions for Facebook Friends');
     var giftDeals = giftDealsContainer.find('.deals .hoverable');
     //select all deals
-    var giftDealsClone = giftDeals.clone();
+    var giftDealsOriginalClone = giftDeals.clone();
     giftDealsContainer.find('.deals').replace("");
     
     //build gift deal container
@@ -91,8 +95,6 @@ Groubook.prototype = {
     
     //filter all deals by gift deals per facebook user
     var giftIdeas = {};
-    console.log('this.friends');
-    console.log(this.friends);
     _(this.friends).each(function(friend) {
       console.log('friend');
       console.log(friend);
@@ -101,13 +103,15 @@ Groubook.prototype = {
       keywords = _(keywords).map(function(keyword) {return keyword.toLowerCase()});
       keywords = _(keywords).reject(function(keyword) {return keyword.length <= 2});
       keywords = _(keywords).without('the');
+      keywords = _(keywords).uniq();
       console.log('keywords');
       console.log(keywords);
+      var giftDealsClone = $($(giftDealsOriginalClone).clone()).toArray();
       _(keywords).each(function(word) {
         _(giftDealsClone).each(function(deal, dealIndex) {
-          var potentialDeal = $(deal).find('.info .title a')[0];
-          if (potentialDeal && potentialDeal.innerHTML.toLowerCase().indexOf(word) != -1) {
-            giftIdeas[friend.name].push(deal);
+          if ($(deal).text().toLowerCase().indexOf(word) != -1) {
+            giftIdeas[friend.name].push($(deal).clone());
+            giftDealsClone.splice(dealIndex, 1);
           }
         });
       });
